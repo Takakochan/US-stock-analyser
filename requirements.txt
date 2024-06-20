@@ -1,6 +1,5 @@
 pandas==2.0.3
 matplotlib
-streamlit==1.22.0
 pyftpdlib
 bytesbufio
 Python-IO
