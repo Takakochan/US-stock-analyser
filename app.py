@@ -1,5 +1,5 @@
 import pandas as pd
-from matplotlib.pylab import *
+import matplotlib.pyplot as plt
 import streamlit as st
 from ftplib import FTP_TLS
 import ftplib
