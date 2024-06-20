@@ -3,3 +3,4 @@ matplotlib
 pyftpdlib
 bytesbufio
 Python-IO
+streamlit==1.22.0
