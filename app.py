@@ -58,22 +58,12 @@ def calculate_eps_growth(current_eps, previous_eps):
 
 
 st.set_page_config(layout="wide")
-#choosensymbol = st.text_input('Put ticker symbol', 'AAPL')
-godsym = df2.index
-with open('/Users/takako/Desktop/data/todays_symbol.txt') as f:
-    f2 = f.read()
-godsym = f2.split(', ')
 
 if "visibility" not in st.session_state:
     st.session_state.visibility = "visible"
     st.session_state.disabled = False
 
-#choosensymbol = st.selectbox(
-#    "昨日出たばかりのEPS!",
-#    (godsym),
-#    label_visibility=st.session_state.visibility,
-#    disabled=st.session_state.disabled,
-#)
+
 
 on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
 on2 = st.toggle('直接シンボル入力')
@@ -83,7 +73,6 @@ if on:
 if on2:
     choosensymbol = st.text_input('Put Ticker Symbol').upper()
 
-#choosensymbol2 = st.text_input('Put Ticker Symbol')
 
 url = 'https://finance.yahoo.com/quote/' + choosensymbol + '/financials?p=' + choosensymbol
 st.write("Yahoo Finance [Page](%s)" % url)
