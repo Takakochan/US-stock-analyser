@@ -80,9 +80,9 @@ for r in result:
     choosensymbol = st.sidebar.selectbox('Select', r)
 #on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
 on2 = st.toggle('直接シンボル入力')
-if on:
+#if on:
     #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
-    choosensymbol = st.radio("選ぶ", (symbols), horizontal=True)
+#    choosensymbol = st.radio("選ぶ", (symbols), horizontal=True)
 if on2:
     choosensymbol = st.text_input('Put Ticker Symbol').upper()
 
