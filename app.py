@@ -19,8 +19,8 @@ try:
     
     flo = BytesIO()
     ftp.retrlines('RETR ' + 'excelentones.txt', symbols.append)
-    print(symbol)
     symbols = symbols[0]
+    print(symbol)
     symbols = symbols.split(', ')
     flo = BytesIO()
     ftp.retrbinary('RETR ' + 'EPS.csv', flo.write)
