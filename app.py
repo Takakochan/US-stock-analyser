@@ -62,12 +62,12 @@ try:
         st.session_state.disabled = False
     
     
-    
-    on = st.toggle('Select a symbol which has revenue announcement today')
+    st.write(symbols)
+    #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
-    if on:
+    #if on:
         #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
-        choosensymbol = st.radio("Select", (symbols), horizontal=True)
+        #choosensymbol = st.radio("Select", (symbols), horizontal=True)
     if on2:
         choosensymbol = st.text_input('Put Ticker Symbol').upper()
     
