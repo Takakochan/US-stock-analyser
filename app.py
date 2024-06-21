@@ -21,6 +21,8 @@ flo = BytesIO()
 ftp.retrlines('RETR ' + 'sokuhotodays_symbol.txt', symbols.append)
 symbols = symbols[0]
 symbols = symbols.split(', ')
+chunk = (len(symbols)//10) + 1
+result = list(split_list(symbols, chunk))
 flo = BytesIO()
 #ftp.retrlines('RETR ' + 'leftover.txt', leftover1.append)
 #leftover1 = leftover1[0]
@@ -65,8 +67,10 @@ if "visibility" not in st.session_state:
     st.session_state.disabled = False
 
 
-
-on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
+results = len(result)
+for r in result: 
+    choosensymbol = st.sidebar.selectbox('Select', r)
+#on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
 on2 = st.toggle('直接シンボル入力')
 if on:
     #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
