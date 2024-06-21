@@ -6,15 +6,7 @@ import ftplib
 from io import BytesIO
 import io
 
-def split_list(l, n):
-    """
-    リストをサブリストに分割する
-    :param l: リスト
-    :param n: サブリストの要素数
-    :return: 
-    """
-    for idx in range(0, len(l), n):
-        yield l[idx:idx + n]
+
 symbols = []
 
 ftp = FTP_TLS('minty-web.com')
@@ -29,8 +21,6 @@ flo = BytesIO()
 ftp.retrlines('RETR ' + 'sokuhotodays_symbol.txt', symbols.append)
 symbols = symbols[0]
 symbols = symbols.split(', ')
-chunk = (len(symbols)//10) + 1
-result = list(split_list(symbols, chunk))
 flo = BytesIO()
 #ftp.retrlines('RETR ' + 'leftover.txt', leftover1.append)
 #leftover1 = leftover1[0]
@@ -75,9 +65,9 @@ if "visibility" not in st.session_state:
     st.session_state.disabled = False
 
 
-results = len(result)
-for r in result: 
-    choosensymbol = st.sidebar.selectbox('Select', r)
+
+
+    choosensymbol = st.sidebar.selectbox('Select', symbols)
 #on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
 on2 = st.toggle('直接シンボル入力')
 #if on:
