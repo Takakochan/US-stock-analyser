@@ -7,6 +7,8 @@ import ftplib
 from io import BytesIO
 import io
 
+warnings.simplefilter('ignore')
+
 symbols = []
 
 ftp = FTP_TLS('minty-web.com')
