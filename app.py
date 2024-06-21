@@ -18,13 +18,10 @@ try:
     ftp.cwd(st.secrets["path"])
     
     flo = BytesIO()
-    ftp.retrlines('RETR ' + 'sokuhotodays_symbol.txt', symbols.append)
+    ftp.retrlines('RETR ' + 'excelentones.txt', symbols.append)
     symbols = symbols[0]
     symbols = symbols.split(', ')
     flo = BytesIO()
-    #ftp.retrlines('RETR ' + 'leftover.txt', leftover1.append)
-    #leftover1 = leftover1[0]
-    #leftover1 = leftover1.split(', ')
     ftp.retrbinary('RETR ' + 'EPS.csv', flo.write)
     flo.seek(0)
     df2 = pd.read_csv(flo, index_col=None, header=0)
