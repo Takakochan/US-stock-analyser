@@ -6,7 +6,9 @@ from ftplib import FTP_TLS
 import ftplib
 from io import BytesIO
 import io
-@st.cache(suppress_st_warning=True)
+
+suppress_st_warning=True
+
 symbols = []
 
 ftp = FTP_TLS('minty-web.com')
