@@ -7,10 +7,6 @@ import ftplib
 from io import BytesIO
 import io
 
-if BOOL_CONDITION:
-    st.write("The condition was met, stopping execution here")
-    st.stop()
-
 symbols = []
 
 ftp = FTP_TLS('minty-web.com')
