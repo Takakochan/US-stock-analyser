@@ -67,7 +67,7 @@ if "visibility" not in st.session_state:
 
 
 
-    choosensymbol = st.sidebar.selectbox('Select', symbols)
+choosensymbol = st.sidebar.selectbox('Select', symbols)
 #on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
 on2 = st.toggle('直接シンボル入力')
 #if on:
