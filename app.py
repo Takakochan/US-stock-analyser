@@ -6,7 +6,15 @@ import ftplib
 from io import BytesIO
 import io
 
-
+def split_list(l, n):
+    """
+    リストをサブリストに分割する
+    :param l: リスト
+    :param n: サブリストの要素数
+    :return: 
+    """
+    for idx in range(0, len(l), n):
+        yield l[idx:idx + n]
 symbols = []
 
 ftp = FTP_TLS('minty-web.com')
