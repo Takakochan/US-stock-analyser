@@ -62,7 +62,7 @@ try:
         st.session_state.disabled = False
     
     
-    st.selectbox('Select', symbols)
+    choosensymbol = st.sidebar.selectbox('Select', symbols)
     #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
     #if on:
