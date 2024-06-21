@@ -21,6 +21,9 @@ try:
     ftp.retrlines('RETR ' + 'excelentones.txt', symbols.append)
     symbols = symbols[0]
     symbols = symbols.split(', ')
+    chunk = (len(symbols)//10) + 1
+    result = list(split_list(symbols, chunk))
+    
     flo = BytesIO()
     ftp.retrbinary('RETR ' + 'EPS.csv', flo.write)
     flo.seek(0)
@@ -61,7 +64,13 @@ try:
         st.session_state.visibility = "visible"
         st.session_state.disabled = False
 
-    choosensymbol = st.sidebar.selectbox('Select', symbols)
+
+    results = len(result)
+    for r in result: 
+        choosensymbol = st.sidebar.selectbox('Select', r)
+    
+
+    
     #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
     #if on:
