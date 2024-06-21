@@ -1,5 +1,5 @@
 import pandas as pd
-import matplotlib.pyplot as plot
+from matplotlib.pylab import *
 import streamlit as st
 from streamlit_toggle import toggle
 from ftplib import FTP_TLS
@@ -101,7 +101,7 @@ with col1:
     #    p2 = str(p)
     #    eps_list2.append(p2)
     fig = plt.figure()
-    eps = plot(paireddate_list, eps_list)
+    eps = plt.plot(paireddate_list, eps_list)
     plt.title('Ticker: ' + choosensymbol + '    EPS Quately Trend')
     st.pyplot(fig)
     ###########################################################
