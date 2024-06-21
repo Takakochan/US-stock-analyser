@@ -1,5 +1,5 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plot
 import streamlit as st
 from streamlit_toggle import toggle
 from ftplib import FTP_TLS
