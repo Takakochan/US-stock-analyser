@@ -66,11 +66,11 @@ try:
     
     
     
-    on = st.toggle('昨日出た良いEPS成長率が出た銘柄から選ぶ')
-    on2 = st.toggle('直接シンボル入力')
+    on = st.toggle('Select a symbol which has revenue announcement today')
+    on2 = st.toggle('Search from symbol')
     if on:
         #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
-        choosensymbol = st.radio("選ぶ", (symbols), horizontal=True)
+        choosensymbol = st.radio("Select", (symbols), horizontal=True)
     if on2:
         choosensymbol = st.text_input('Put Ticker Symbol').upper()
     
@@ -155,18 +155,18 @@ try:
     eps_q1 = float(la)  #前期の一年前の四半期EPS
     
     with col1:  #(当期EPS－前期EPS）÷前期EPS×100
-        st.text('前年同期比')
+        st.text('Year-on-year change')
         # Example EPS values
         # Calculate EPS growth QoQ
         eps_growth_qoq = calculate_eps_growth(
             peps_q2, peps_q1)  #calculate_eps_growth(current_eps, previous_eps)
-        st.subheader(f"今四半期EPS成長率は: {eps_growth_qoq:.2f}%")
+        st.subheader(f"EPS growth rate for this quarter is: {eps_growth_qoq:.2f}%")
     
         eps_growth_qoq = calculate_eps_growth(eps_q2, eps_q1)
-        st.subheader(f"前四半期EPS成長率は: {eps_growth_qoq:.2f}%"
+        st.subheader(f"QoQ EPS growth rate is: {eps_growth_qoq:.2f}%"
                      )  #calculate_eps_growth(current_eps, previous_eps)
         
     
-    st.subheader('今期EPSサプライズは' + str(surprise) + '%')
+    st.subheader('EPS surprises this quarter are' + str(surprise) + '%')
 except:
     pass
