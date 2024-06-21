@@ -153,10 +153,10 @@ try:
         # Calculate EPS growth QoQ
         eps_growth_qoq = calculate_eps_growth(
             peps_q2, peps_q1)  #calculate_eps_growth(current_eps, previous_eps)
-        st.subheader(f"EPS growth rate for this quarter is: {eps_growth_qoq:.2f}%")
+        st.subheader(f"EPS growth rate (YoY) for last quarter was: {eps_growth_qoq:.2f}%")
     
         eps_growth_qoq = calculate_eps_growth(eps_q2, eps_q1)
-        st.subheader(f"QoQ EPS growth rate is: {eps_growth_qoq:.2f}%"
+        st.subheader(f"EPS growth rate (YoY) 2 quater before was: {eps_growth_qoq:.2f}%"
                      )  #calculate_eps_growth(current_eps, previous_eps)
         
     
