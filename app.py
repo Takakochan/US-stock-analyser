@@ -61,8 +61,8 @@ try:
         st.session_state.visibility = "visible"
         st.session_state.disabled = False
     
-    
-    st.write(symbols)
+    for s in symbols:
+        st.write(s)
     #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
     #if on:
