@@ -19,6 +19,7 @@ try:
     
     flo = BytesIO()
     ftp.retrlines('RETR ' + 'excelentones.txt', symbols.append)
+    print(symbol)
     symbols = symbols[0]
     symbols = symbols.split(', ')
     flo = BytesIO()
