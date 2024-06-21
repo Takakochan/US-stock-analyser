@@ -61,7 +61,7 @@ try:
         st.session_state.visibility = "visible"
         st.session_state.disabled = False
     
-    
+    print(symbols)
     choosensymbol = st.sidebar.selectbox('Select', symbols)
     #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
@@ -80,7 +80,6 @@ try:
         #EPS推移のグラフ
         tickersymbol2 = df2.loc[choosensymbol]
         surprise = tickersymbol2.loc["Surprise(%)"]
-        print(tickersymbol2)
         tickersymbol2 = tickersymbol2.drop('Surprise(%)')
         print(tickersymbol2)
         eps_list = []
