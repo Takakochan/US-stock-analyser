@@ -62,7 +62,7 @@ try:
         st.session_state.disabled = False
     
     for s in symbols:
-        st.sidebar.write(s)
+        st.sidebar.markdown("- " + s)
     #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
     #if on:
