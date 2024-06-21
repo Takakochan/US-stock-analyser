@@ -18,7 +18,7 @@ ftp.set_pasv('true')
 ftp.cwd(st.secrets["path"])
 
 flo = BytesIO()
-ftp.retrlines('RETR ' + 'sokuhotodays_symbol.txt', symbols.append)
+ftp.retrlines('RETR ' + 'excelentones.txt', symbols.append)
 symbols = symbols[0]
 symbols = symbols.split(', ')
 flo = BytesIO()
