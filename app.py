@@ -160,7 +160,6 @@ peps_q1 = float(t)  #一年前ののEPS
 l = tickersymbol2[-2]
 eps_q2 = float(l)  #前期の四半期EPS
 la = tickersymbol2[-6]
-
 if la == float:
     la = la
 else:
