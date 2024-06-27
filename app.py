@@ -88,6 +88,7 @@ with col1:
 
     for d in date_list2:
         paireddate_list.append((d))
+        tickersymbol2[d] = tickersymbol2[d].str.replace('%','').str.replace('−','-').astype(float)
         eps_list.append(float(tickersymbol2[d]))
     #eps_list2 = []
     #for p in eps_list:
