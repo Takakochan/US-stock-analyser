@@ -89,6 +89,13 @@ with col1:
     for d in date_list2:
         print(d)
         paireddate_list.append((d))
+        if tickersymbol2[d].startswith('−'):
+            t = tickersymbol2[d]
+            t = t[1:]
+            t =float(t)
+            tickersymbol2[d] = t * -1
+        else:
+            continue
         eps_list.append(float(tickersymbol2[d]))
     #eps_list2 = []
     #for p in eps_list:
