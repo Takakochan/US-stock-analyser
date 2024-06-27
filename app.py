@@ -146,7 +146,7 @@ this = tickersymbol2[-1]
 if this == float:
     this = this
 else:
-    tthis = this.replace('−','-')
+    this = this.replace('−','-')
 peps_q2 = float(this)  #今期EPS
 
 t = tickersymbol2[-5]
@@ -160,6 +160,11 @@ peps_q1 = float(t)  #一年前ののEPS
 l = tickersymbol2[-2]
 eps_q2 = float(l)  #前期の四半期EPS
 la = tickersymbol2[-6]
+
+if la == float:
+    la = la
+else:
+    la = la.replace('−','-')
 eps_q1 = float(la)  #前期の一年前の四半期EPS
 
 with col1:  #(当期EPS－前期EPS）÷前期EPS×100
