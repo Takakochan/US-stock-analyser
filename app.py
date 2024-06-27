@@ -143,8 +143,17 @@ with col3:
 tickersymbol2 = tickersymbol2.dropna(how='all')
 #今期
 this = tickersymbol2[-1]
+if this == float:
+    continue
+else:
+    tthis = this.replace('−','-')
 peps_q2 = float(this)  #今期EPS
+
 t = tickersymbol2[-5]
+if t == float:
+    continue
+else:
+    t = t.replace('−','-')
 peps_q1 = float(t)  #一年前ののEPS
 
 #前期
