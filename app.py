@@ -92,8 +92,8 @@ with col1:
         if tickersymbol2[d] == float:
             eps_list.append(tickersymbol2[d])
         else:
-            t = tickersymbol2[d].str.replace('−','-').astype(float)
-            eps_list.append(t)
+            t = tickersymbol2[d].replace('−','-')
+            eps_list.append(float(t))
     #eps_list2 = []
     #for p in eps_list:
     #    p2 = str(p)
