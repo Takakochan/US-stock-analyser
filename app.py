@@ -59,7 +59,7 @@ try:
     if "visibility" not in st.session_state:
         st.session_state.visibility = "visible"
         st.session_state.disabled = False
-    choosensymbol = st.sidebar.selectbox('Select', symbols)
+    #choosensymbol = st.sidebar.selectbox('Select', symbols)
     #on = st.toggle('Select a symbol which has revenue announcement today')
     on2 = st.toggle('Search from symbol')
     #if on:
