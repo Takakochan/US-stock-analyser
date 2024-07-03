@@ -66,7 +66,7 @@ try:
         #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
         #choosensymbol = st.radio("Select", (symbols), horizontal=True)
     if on2:
-        choosensymbol = st.text_input('Put Ticker Symbol').upper()
+        choosensymbol = st.text_input('Put Ticker Symbol. e.g.)AAPL').upper()
     
     
     url = 'https://finance.yahoo.com/quote/' + choosensymbol + '/financials?p=' + choosensymbol
