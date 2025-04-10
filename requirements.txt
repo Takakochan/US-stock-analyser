@@ -4,3 +4,5 @@ pyftpdlib
 bytesbufio
 Python-IO
 streamlit-toggle
+requests
+datetime
