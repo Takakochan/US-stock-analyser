@@ -314,7 +314,7 @@ try:
 #        
 #    
 #    st.subheader('EPS surprises this quarter are' + str(surprise) + '%')
-#except:
-#    pass
-#
-#
+except:
+    pass
+
+
