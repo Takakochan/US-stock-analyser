@@ -63,7 +63,7 @@ if "visibility" not in st.session_state:
     st.session_state.disabled = False
 #choosensymbol = st.sidebar.selectbox('Select', symbols)
 #on = st.toggle('Select a symbol which has revenue announcement today')
-on2 = st.toggle('Search from symbol')
+#on2 = st.toggle('Search from symbol')
 #if on:
     #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
     #choosensymbol = st.radio("Select", (symbols), horizontal=True)
