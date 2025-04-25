@@ -155,14 +155,13 @@ with col1:
     except:
       pass
 with col2:
-  
-    client = OpenAI(
+  client = OpenAI(
         # This is the default and can be omitted
-        api_key = st.secrets["OPENAI_API_KEY"]
-        client = OpenAI(api_key=api_key)
+    api_key = st.secrets["OPENAI_API_KEY"]
+    client = OpenAI(api_key=api_key)
 
-    response = client.responses.create(
-        model="gpt-3.5-turbo",
-        instructions="You are a specialist of US stock market",
-        input="What is the name of the company for this symbol" + choosensymbol + "? Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales.",)
-    st.write(response.output_text)
+  response = client.responses.create(
+      model="gpt-3.5-turbo",
+      instructions="You are a specialist of US stock market",
+      input="What is the name of the company for this symbol" + choosensymbol + "? Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales.",)
+  st.write(response.output_text)
