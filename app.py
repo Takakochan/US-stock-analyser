@@ -157,7 +157,7 @@ with col1:
     except:
       pass
 with col2:
-
+  st.write("OpenAI research")
 
   response = client.responses.create(
       model="gpt-3.5-turbo",
