@@ -6,3 +6,4 @@ Python-IO
 streamlit-toggle
 requests
 datetime
+openai == 1.76.0
