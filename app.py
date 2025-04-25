@@ -13,6 +13,8 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
+api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=api_key)
 
 headers = {"User-Agent" : "takakokunugi@gmil.com"}
 #get all companies data
@@ -155,8 +157,7 @@ with col1:
     except:
       pass
 with col2:
-api_key = st.secrets["OPENAI_API_KEY"]
-client = OpenAI(api_key=api_key)
+
 
   response = client.responses.create(
       model="gpt-3.5-turbo",
