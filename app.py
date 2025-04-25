@@ -8,6 +8,7 @@ import io
 import numpy as np
 import re
 import requests
+from openai import OpenAI
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -153,3 +154,15 @@ with col1:
         st.pyplot(plt)
     except:
       pass
+with col2:
+  
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key = st.secrets["OPENAI_API_KEY"]
+        client = OpenAI(api_key=api_key)
+
+    response = client.responses.create(
+        model="gpt-3.5-turbo",
+        instructions="You are a specialist of US stock market",
+        input="What is the name of the company for this symbol" + choosensymbol + "? Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales.",)
+    st.write(response.output_text)
