@@ -157,6 +157,88 @@ with col1:
     except:
       pass
 with col2:
+  st.write("competitor's growth")
+  responce2 = client.responce.create(model="gpt-3.5-turbo", input = "Could you give me list of the competitor's stock symbols for" + choosensymbol+ "? I only need as a type of list in python."
+  for r in responce2:
+    item = next((item for item in companyTickers.json().values() if item['ticker'] == r), None)
+    try:
+        directCik = item['cik_str']
+        comname = item['title']
+        cik = str(directCik).zfill(10)
+        filingMetadata = requests.get(
+            f'https://data.sec.gov/submissions/CIK{cik}.json',
+            headers=headers
+            )
+        companyFacts = requests.get(f'https://data.sec.gov/submissions/CIK{cik}.json', headers=headers)
+        
+        epss, revenues = get_company_facts(headers, cik)
+        
+        today = pd.Timestamp.today()
+        filed = today - pd.to_datetime(epss.iloc[-1,7]).normalize()
+        filed = filed / timedelta(days=1)
+    
+        get_days_differ(epss)
+        epss = epss.drop_duplicates(subset='end',keep = "last")
+        epss["eps_3_cal_sum"] = epss["val"].rolling(3).sum().shift()
+        epss["rev_3_cal_sum"] = epss["rev"].rolling(3).sum().shift()
+        
+        #print(epss.tail(20))
+        
+        eps_3_cal_sum = epss.eps_3_cal_sum.tolist()
+        rev_3_cal_sum = epss.rev_3_cal_sum.tolist()
+        given_eps = epss.val.tolist()
+        given_rev = epss.rev.tolist()
+        differ_days = epss.differ.tolist()
+        final_epss =[]
+        final_rev=[]
+        for cal, cal_rev, given, giv_rev, differ in zip(eps_3_cal_sum, rev_3_cal_sum, given_eps, given_rev, differ_days):
+            if differ > 300:
+                f = given - cal
+                r = giv_rev - cal_rev
+                final_epss.append(f)
+                final_rev.append(r)
+            else:
+                f=given
+                r = giv_rev
+                final_epss.append(f)
+                final_rev.append(r)
+        
+        epss['EPS'] = final_epss 
+        epss['Revenue'] = final_rev
+        epss = epss.rename({'end':'closed_dates'}, axis='columns')
+        
+        lir=epss['EPS']
+        lir = list(lir)
+        lir=reversed(lir)  
+        lir = list(lir)
+        previous = lir[4]
+        thisyear = lir[0]
+        q1previouseps = lir[1]
+        q2previouseps = lir[2]
+        q3previouseps = lir[3]
+        processor = floatProcessor(previous)
+        previous= processor.process()
+        processor = floatProcessor(q3previouseps)
+        q3previouseps= processor.process()
+        processor = floatProcessor(q2previouseps)
+        q2previouseps= processor.process()
+        processor = floatProcessor(q1previouseps)
+        q1previouseps= processor.process()
+        processor = floatProcessor(thisyear)
+        thisyear= processor.process()
+    
+        fig = plt.figure()
+        ax = epss.tail(10).plot(x="closed_dates", y=["EPS"], marker='o', color='#FE53BB')
+        epss.tail(10).plot(x="closed_dates", y=["Revenue"], secondary_y=True, ax =ax,  marker='o', color='#0040ff')
+        plt.title('Ticker: ' + choosensymbol + '    ESP and Revenue Quately Trend')
+        plt.xticks(size=8, rotation=-75)
+        
+        st.pyplot(plt)
+    except:
+      pass
+
+
+with col3:
   st.write("OpenAI research")
 
   response = client.responses.create(
@@ -164,3 +246,6 @@ with col2:
       instructions="You are a specialist of US stock market",
       input="What is the name of the company for this symbol" + choosensymbol + "? Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales.",)
   st.write(response.output_text)
+
+
+  
