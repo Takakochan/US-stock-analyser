@@ -172,7 +172,7 @@ with col2:
 
 with col3:
   st.write("competitor's growth")
-  responce2 = client.responses.create(model="gpt-3.5-turbo", input = "return only a list, extracting only stock symbols from the text, "+ response.output_text+"(eg. AAPL, META, MSFT) ")
+  responce2 = client.responses.create(model="gpt-3.5-turbo", input = "make a list in text extracting only stock symbols from the text, "+ response.output_text+"(eg. AAPL, META, MSFT) ")
   st.write(responce2.output_text)
   res = responce2.output_text
   #res=res.split(', ')
