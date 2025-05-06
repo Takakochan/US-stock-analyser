@@ -246,7 +246,7 @@ with col3:
         fig = plt.figure()
         ax = epss.tail(10).plot(x="closed_dates", y=["EPS"], marker='o', color='#FE53BB')
         epss.tail(10).plot(x="closed_dates", y=["Revenue"], secondary_y=True, ax =ax,  marker='o', color='#0040ff')
-        plt.title('Ticker: ' + choosensymbol + '    ESP and Revenue Quately Trend')
+        plt.title('Ticker: ' + r + '    ESP and Revenue Quately Trend')
         plt.xticks(size=8, rotation=-75)
         
         st.pyplot(plt)
