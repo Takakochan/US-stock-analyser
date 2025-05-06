@@ -174,7 +174,8 @@ with col3:
   st.write("competitor's growth")
   responce2 = client.responses.create(model="gpt-3.5-turbo", input = "return only a list in python script, extracting only stock symbols from the text, (eg.['AAPL', 'META', 'MSFT']) "+ response.output_text)
   st.write(responce2.output_text)
-  for r in responce2:
+  res = responce2.output_text
+  for r in res:
     item = next((item for item in companyTickers.json().values() if item['ticker'] == r), None)
     try:
         directCik = item['cik_str']
