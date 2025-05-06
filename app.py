@@ -159,6 +159,7 @@ with col1:
 with col2:
   st.write("competitor's growth")
   responce2 = client.responses.create(model="gpt-3.5-turbo", input = "Could you give me list of the competitor's stock symbols for" + choosensymbol+ "? I only need as a type of list in python.")
+  st.write(responce2)
   for r in responce2:
     item = next((item for item in companyTickers.json().values() if item['ticker'] == r), None)
     try:
