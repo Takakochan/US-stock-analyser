@@ -3,7 +3,7 @@ You can try the app here!
 
 https://us-stock-analyse.streamlit.app/
 
-Analyse growth based on EPS and revenue...
+Useful App! Analyse growth based on EPS and revenue...
 
 
 # Financial Data Viewer with EPS & Revenue Trends
