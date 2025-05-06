@@ -176,6 +176,7 @@ with col3:
   st.write(responce2.output_text)
   res = responce2.output_text
   for r in res:
+    st.write(r)
     item = next((item for item in companyTickers.json().values() if item['ticker'] == r), None)
     try:
         directCik = item['cik_str']
