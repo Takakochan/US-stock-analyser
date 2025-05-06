@@ -170,7 +170,8 @@ with col2:
     )
     st.write(response.output_text)
 with col3:
-    st.write("competitor's growth")
+    st.write("Competitor's growth")
+    st.write("*The growth charts displayed in this app are generated using data from the SEC API. Please note that companies that do not follow standard reporting formats may not appear accurately—or may be omitted entirely—from the charts.*")
     responce2 = client.responses.create(
         model="gpt-3.5-turbo",
         input=
