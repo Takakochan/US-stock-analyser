@@ -156,9 +156,23 @@ with col1:
         st.pyplot(plt)
     except:
       pass
+
+
 with col2:
+  st.write("OpenAI research")
+
+  response = client.responses.create(
+      model="gpt-3.5-turbo",
+      instructions="You are a specialist of US stock market",
+      input="What is the name of the company for this symbol" + choosensymbol + "? Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales.",)
+  st.write(response.output_text)
+
+
+
+
+with col3:
   st.write("competitor's growth")
-  responce2 = client.responses.create(model="gpt-3.5-turbo", input = "Could you give me list of the competitor's stock symbols for" + choosensymbol+ "? I only need as a type of list in python.")
+  responce2 = client.responses.create(model="gpt-3.5-turbo", input = "return only a list in python script extracting only symbols from"+ response)
   st.write(responce2.output_text)
   for r in responce2:
     item = next((item for item in companyTickers.json().values() if item['ticker'] == r), None)
