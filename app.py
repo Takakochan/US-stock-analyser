@@ -175,7 +175,8 @@ with col3:
   responce2 = client.responses.create(model="gpt-3.5-turbo", input = "make a list in text extracting only stock symbols from the text, "+ response.output_text+"(eg. AAPL, META, MSFT) ")
   st.write(responce2.output_text)
   res = responce2.output_text
-  st.write(type(res))
+  print("PPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
+  print(type(res))
   res= res.replace("'","")
   res=res.split(', ')
   #st.write(res[1])
