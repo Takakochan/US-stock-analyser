@@ -175,7 +175,11 @@ with col3:
   responce2 = client.responses.create(model="gpt-3.5-turbo", input = "return only a list in python script, extracting only stock symbols from the text, (eg.['AAPL', 'META', 'MSFT']) "+ response.output_text)
   st.write(responce2.output_text)
   res = responce2.output_text
-  res= list(res)
+  res= res.replace('[','')
+  res= res.replace(']','')
+  res=res.replace("'","")
+  res=res.split(', ')
+  st.write(type(res))
   st.write(res[1])
   for r in res:
     item = next((item for item in companyTickers.json().values() if item['ticker'] == r), None)
