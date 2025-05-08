@@ -16,258 +16,177 @@ from datetime import timedelta
 api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
 
-headers = {"User-Agent" : "takakokunugi@gmil.com"}
-#get all companies data
-companyTickers = requests.get("https://www.sec.gov/files/company_tickers.json",
-                             headers = headers)
-class floatProcessor:
+
+# Get all companies data once
+company_tickers = requests.get(
+    "https://www.sec.gov/files/company_tickers.json", headers=headers).json()
+
+
+# Helper class to robustly parse floats
+class FloatProcessor:
+
     def __init__(self, s):
         self.s = s
+
     def process(self):
-        self.s = str(self.s)
-        self.s = re.sub(r'[^\x00-\x7F]+', '-', self.s)
-        self.s = float(self.s)
-        return self.s
+        s = re.sub(r'[^\x00-\x7F]+', '-', str(self.s))
+        return float(s)
+
 
 def get_company_facts(headers, cik):
-    facts = requests.get(f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json", headers= headers)
-    epss = pd.json_normalize(facts.json()['facts']['us-gaap']['EarningsPerShareDiluted']['units']['USD/shares'])
-    revenues = pd.json_normalize(facts.json()['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD'])
+    facts = requests.get(
+        f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json",
+        headers=headers).json()
+    epss = pd.json_normalize(
+        facts['facts']['us-gaap']['EarningsPerShareDiluted']['units']
+        ['USD/shares'])
+    revenues = pd.json_normalize(facts['facts']['us-gaap'][
+        'RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD'])
+    # Clean up dataframe
     epss = epss.dropna(subset=['frame'])
-    revenues = revenues.dropna(subset=['frame'])
-    revenues = revenues[['end','val']]
-    revenues = revenues.rename(columns={'val': 'rev'})
-    epss = epss.merge(revenues, on = 'end')
+    revenues = revenues.dropna(subset=['frame'])[[
+        "end", "val"
+    ]].rename(columns={"val": "rev"})
+    epss = epss.merge(revenues, on='end')
     return epss, revenues
 
 
-
-def get_days_differ(epss):
-    differ = []
-    for row in epss.itertuples():
-        differDays = pd.to_datetime(row.end) - pd.to_datetime(row.start)
-        differDays = pd.to_timedelta(differDays).days
-        differ.append(differDays)
-        
+def add_differ_days(epss):
+    # Compute difference in days between 'end' and 'start'
+    differ = (pd.to_datetime(epss.end) - pd.to_datetime(epss.start)).dt.days
     epss['differ'] = differ
-    epss = epss[~epss['differ'].between(100,300)]
+    return epss[~epss['differ'].between(100, 300)]
+
+
+def process_eps_revenue(epss):
+    # Drop duplicate quarter-ends
+    epss = epss.drop_duplicates(subset='end', keep="last")
+    # Rolling sums to estimate trailing data
+    epss["eps_3_cal_sum"] = epss["val"].rolling(3).sum().shift()
+    epss["rev_3_cal_sum"] = epss["rev"].rolling(3).sum().shift()
+    # Calculate adjusted EPS and revenue, depending on period gap
+    final_epss, final_rev = [], []
+    for cal, cal_rev, given, giv_rev, differ in zip(
+            epss.eps_3_cal_sum.fillna(0), epss.rev_3_cal_sum.fillna(0),
+            epss.val, epss.rev, epss.differ):
+        if differ > 300:
+            final_epss.append(given - cal)
+            final_rev.append(giv_rev - cal_rev)
+        else:
+            final_epss.append(given)
+            final_rev.append(giv_rev)
+    epss['EPS'] = final_epss
+    epss['Revenue'] = final_rev
+    epss = epss.rename(columns={'end': 'closed_dates'})
     return epss
 
-    
-def calculate_eps_growth(current_eps, previous_eps):
-    eps_growth = ((current_eps - previous_eps) / abs(previous_eps)) * 100
-    return eps_growth
 
-st.set_option('client.showErrorDetails', False)
+def plot_eps_revenue(epss, title):
+    fig, ax1 = plt.subplots(figsize=(8, 4))
+    epss.tail(10).plot(x="closed_dates",
+                       y="EPS",
+                       marker='o',
+                       color='#FE53BB',
+                       ax=ax1)
+    ax2 = ax1.twinx()
+    epss.tail(10).plot(x="closed_dates",
+                       y="Revenue",
+                       secondary_y=True,
+                       marker='o',
+                       color='#0040ff',
+                       ax=ax2)
+    plt.title(title)
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
+
+
+def extract_eps_list(epss):
+    # Returns a list of last N EPS values, ready to use and processed
+    lir = list(reversed(list(epss['EPS'])))
+    floats = [FloatProcessor(x).process() for x in lir[:5]]
+    return floats  # [thisyear, q1prev, q2prev, q3prev, previous]
+
+
+def fetch_and_plot_ticker(choosensymbol,
+                          company_tickers,
+                          headers,
+                          show_plot=True):
+    # Get ticker info
+    item = next((item for item in company_tickers.values()
+                 if item['ticker'] == choosensymbol), None)
+    if not item:
+        st.error(f"Ticker {choosensymbol} not found.")
+        return None
+    try:
+        cik = str(item['cik_str']).zfill(10)
+        epss, _ = get_company_facts(headers, cik)
+        epss = add_differ_days(epss)
+        epss = process_eps_revenue(epss)
+        if show_plot:
+            plot_eps_revenue(
+                epss,
+                f'Ticker: {choosensymbol} - EPS and Revenue Quarterly Trend')
+        return epss
+    except Exception as e:
+        st.warning(f"Could not fetch data for {choosensymbol}: {e}")
+    return None
+
+
+# --- STREAMLIT START ----
+
 st.set_page_config(layout="wide")
+st.set_option('client.showErrorDetails', False)
 
-if "visibility" not in st.session_state:
-    st.session_state.visibility = "visible"
-    st.session_state.disabled = False
-#choosensymbol = st.sidebar.selectbox('Select', symbols)
-#on = st.toggle('Select a symbol which has revenue announcement today')
-#on2 = st.toggle('Search from symbol')
-#if on:
-    #st.write('昨日良いEPS成長率が出た銘柄から選ぶ')
-    #choosensymbol = st.radio("Select", (symbols), horizontal=True)
-#if on2:
+# User input for stock ticker
 choosensymbol = st.text_input('Put Ticker Symbol. e.g.)AAPL').upper()
+if not choosensymbol:
+    st.stop()
 
-
-url = 'https://finance.yahoo.com/quote/' + choosensymbol + '/financials?p=' + choosensymbol
-st.write("Yahoo Finance [Page](%s)" % url)
+url = f'https://finance.yahoo.com/quote/{choosensymbol}/financials?p={choosensymbol}'
+st.markdown(f"[Yahoo Finance Page for {choosensymbol}]({url})")
 
 col1, col2, col3 = st.columns(3)
+
 with col1:
-    item = next((item for item in companyTickers.json().values() if item['ticker'] == choosensymbol), None)
-
-    try:
-        directCik = item['cik_str']
-        comname = item['title']
-        cik = str(directCik).zfill(10)
-        filingMetadata = requests.get(
-            f'https://data.sec.gov/submissions/CIK{cik}.json',
-            headers=headers
-            )
-        companyFacts = requests.get(f'https://data.sec.gov/submissions/CIK{cik}.json', headers=headers)
-        
-        epss, revenues = get_company_facts(headers, cik)
-        
-        today = pd.Timestamp.today()
-        filed = today - pd.to_datetime(epss.iloc[-1,7]).normalize()
-        filed = filed / timedelta(days=1)
-    
-        get_days_differ(epss)
-        epss = epss.drop_duplicates(subset='end',keep = "last")
-        epss["eps_3_cal_sum"] = epss["val"].rolling(3).sum().shift()
-        epss["rev_3_cal_sum"] = epss["rev"].rolling(3).sum().shift()
-        
-        #print(epss.tail(20))
-        
-        eps_3_cal_sum = epss.eps_3_cal_sum.tolist()
-        rev_3_cal_sum = epss.rev_3_cal_sum.tolist()
-        given_eps = epss.val.tolist()
-        given_rev = epss.rev.tolist()
-        differ_days = epss.differ.tolist()
-        final_epss =[]
-        final_rev=[]
-        for cal, cal_rev, given, giv_rev, differ in zip(eps_3_cal_sum, rev_3_cal_sum, given_eps, given_rev, differ_days):
-            if differ > 300:
-                f = given - cal
-                r = giv_rev - cal_rev
-                final_epss.append(f)
-                final_rev.append(r)
-            else:
-                f=given
-                r = giv_rev
-                final_epss.append(f)
-                final_rev.append(r)
-        
-        epss['EPS'] = final_epss 
-        epss['Revenue'] = final_rev
-        epss = epss.rename({'end':'closed_dates'}, axis='columns')
-        
-        lir=epss['EPS']
-        lir = list(lir)
-        lir=reversed(lir)  
-        lir = list(lir)
-        previous = lir[4]
-        thisyear = lir[0]
-        q1previouseps = lir[1]
-        q2previouseps = lir[2]
-        q3previouseps = lir[3]
-        processor = floatProcessor(previous)
-        previous= processor.process()
-        processor = floatProcessor(q3previouseps)
-        q3previouseps= processor.process()
-        processor = floatProcessor(q2previouseps)
-        q2previouseps= processor.process()
-        processor = floatProcessor(q1previouseps)
-        q1previouseps= processor.process()
-        processor = floatProcessor(thisyear)
-        thisyear= processor.process()
-    
-        fig = plt.figure()
-        ax = epss.tail(10).plot(x="closed_dates", y=["EPS"], marker='o', color='#FE53BB')
-        epss.tail(10).plot(x="closed_dates", y=["Revenue"], secondary_y=True, ax =ax,  marker='o', color='#0040ff')
-        plt.title('Ticker: ' + choosensymbol + '    ESP and Revenue Quately Trend')
-        plt.xticks(size=8, rotation=-75)
-        
-        st.pyplot(plt)
-    except:
-      pass
-
+    epss = fetch_and_plot_ticker(choosensymbol, company_tickers, headers)
 
 with col2:
     st.write("OpenAI research")
+    try:
+        # Compose OpenAI prompt
+        prompt = (
+            f"What is the name of the company for this symbol {choosensymbol}? "
+            "Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales."
+        )
+        response = client.responses.create(
+            model="gpt-3.5-turbo",
+            instructions="You are a specialist of US stock market",
+            input=prompt,
+        )
+        st.write(response.output_text)
+    except Exception as e:
+        st.write(f"Error from OpenAI: {e}")
 
-    response = client.responses.create(
-        model="gpt-3.5-turbo",
-        instructions="You are a specialist of US stock market",
-        input="What is the name of the company for this symbol" +
-        choosensymbol +
-        "? Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales.",
-    )
-    st.write(response.output_text)
 with col3:
     st.write("Competitor's growth")
-    st.caption("*The growth charts displayed in this app are generated using data from the SEC API. Please note that companies that do not follow standard reporting formats may not appear accurately—or may be omitted entirely—from the charts.*")
-    responce2 = client.responses.create(
-        model="gpt-3.5-turbo",
-        input=
-        "make a list in text extracting only stock symbols from the text, " +
-        response.output_text + "(eg. AAPL, META, MSFT) ")
-
-    res = responce2.output_text
-    print("PPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
-    print(type(res))
-    res = res.replace("'", "")
-    res = res.split(', ')
-    print(res)
-    for r in res:
-        if r == str("FB"):
-            r = "META"
-        st.write("Ticker: " + r)
-        item = next((item for item in companyTickers.json().values()
-                     if item['ticker'] == r), None)
-        try:
-            directCik = item['cik_str']
-            comname = item['title']
-            cik = str(directCik).zfill(10)
-            filingMetadata = requests.get(
-                f'https://data.sec.gov/submissions/CIK{cik}.json',
-                headers=headers)
-            companyFacts = requests.get(
-                f'https://data.sec.gov/submissions/CIK{cik}.json',
-                headers=headers)
-            epss, revenues = get_company_facts(headers, cik)
-            today = pd.Timestamp.today()
-            filed = today - pd.to_datetime(epss.iloc[-1, 7]).normalize()
-            filed = filed / timedelta(days=1)
-            get_days_differ(epss)
-            epss = epss.drop_duplicates(subset='end', keep="last")
-            epss["eps_3_cal_sum"] = epss["val"].rolling(3).sum().shift()
-            epss["rev_3_cal_sum"] = epss["rev"].rolling(3).sum().shift()
-            #print(epss.tail(20))
-            eps_3_cal_sum = epss.eps_3_cal_sum.tolist()
-            rev_3_cal_sum = epss.rev_3_cal_sum.tolist()
-            given_eps = epss.val.tolist()
-            given_rev = epss.rev.tolist()
-            differ_days = epss.differ.tolist()
-            final_epss = []
-            final_rev = []
-            for cal, cal_rev, given, giv_rev, differ in zip(
-                    eps_3_cal_sum, rev_3_cal_sum, given_eps, given_rev,
-                    differ_days):
-                if differ > 300:
-                    f = given - cal
-                    r = giv_rev - cal_rev
-                    final_epss.append(f)
-                    final_rev.append(r)
-                else:
-                    f = given
-                    r = giv_rev
-                    final_epss.append(f)
-                    final_rev.append(r)
-            epss['EPS'] = final_epss
-            epss['Revenue'] = final_rev
-            epss = epss.rename({'end': 'closed_dates'}, axis='columns')
-            lir = epss['EPS']
-            lir = list(lir)
-            lir = reversed(lir)
-            lir = list(lir)
-            previous = lir[4]
-            thisyear = lir[0]
-            q1previouseps = lir[1]
-            q2previouseps = lir[2]
-            q3previouseps = lir[3]
-            processor = floatProcessor(previous)
-            previous = processor.process()
-            processor = floatProcessor(q3previouseps)
-            q3previouseps = processor.process()
-            processor = floatProcessor(q2previouseps)
-            q2previouseps = processor.process()
-            processor = floatProcessor(q1previouseps)
-            q1previouseps = processor.process()
-            processor = floatProcessor(thisyear)
-            thisyear = processor.process()
-            fig = plt.figure()
-            ax = epss.tail(10).plot(x="closed_dates",
-                                    y=["EPS"],
-                                    marker='o',
-                                    color='#FE53BB')
-            epss.tail(10).plot(x="closed_dates",
-                               y=["Revenue"],
-                               secondary_y=True,
-                               ax=ax,
-                               marker='o',
-                               color='#0040ff')
-            plt.title(' ESP and Revenue Quately Trend')
-            plt.xticks(size=8, rotation=-75)
-            st.pyplot(plt)
-        except:
-            continue
-
+    try:
+        res2_prompt = f"Extract only US stock ticker symbols from this text (e.g., AAPL, META, MSFT): {response.output_text}"
+        response2 = client.responses.create(
+            model="gpt-3.5-turbo",
+            input=res2_prompt,
+        )
+        # Basic parsing, should ideally use regex to extract only valid tickers
+        tickers = [
+            t.replace("'", '').strip().upper()
+            for t in re.split(r'[,\s]+', response2.output_text)
+            if t.isalnum() and len(t) <= 5  # crude filter
+        ]
+        for r in tickers:
+            if r == "FB": r = "META"  # handle Facebook->Meta change
+            st.write(f"Ticker: {r}")
+            fetch_and_plot_ticker(r, company_tickers, headers, show_plot=True)
+    except Exception as e:
+        st.write(f"OpenAI or fetch competitor data error: {e}")
 
 
 
