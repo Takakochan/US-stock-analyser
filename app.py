@@ -18,8 +18,7 @@ client = OpenAI(api_key=api_key)
 
 
 # Get all companies data once
-company_tickers = requests.get(
-    "https://www.sec.gov/files/company_tickers.json", headers=headers).json()
+company_tickers = requests.get("https://www.sec.gov/files/company_tickers.json", headers=headers).json()
 
 
 # Helper class to robustly parse floats
