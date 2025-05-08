@@ -137,7 +137,7 @@ st.set_page_config(layout="wide")
 st.set_option('client.showErrorDetails', False)
 
 # User input for stock ticker
-choosensymbol = st.text_input('Put Ticker Symbol. e.g.)AAPL').upper()
+choosensymbol = st.text_input('Input the stock symbol you’d like to analyze (e.g., AAPL):').upper()
 if not choosensymbol:
     st.stop()
 
