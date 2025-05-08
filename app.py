@@ -15,7 +15,7 @@ from datetime import timedelta
 
 api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
-
+headers = {"User-Agent": "takakokunugi@gmail.com"}
 
 # Get all companies data once
 company_tickers = requests.get("https://www.sec.gov/files/company_tickers.json", headers=headers).json()
