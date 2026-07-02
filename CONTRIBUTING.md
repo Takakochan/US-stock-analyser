@@ -1,25 +1,24 @@
 # Contributing to US Stock Analyser
 
-Thank you for your interest in contributing to US Stock Analyser! This document provides guidelines and instructions for contributing.
+Thanks for your interest in contributing. This document covers the basics of reporting bugs, suggesting changes, and submitting pull requests.
 
-## 🌟 How to Contribute
+## How to Contribute
 
 ### Reporting Bugs
 
-If you find a bug, please create an issue with:
-- Clear description of the problem
-- Steps to reproduce
-- Expected vs actual behavior
-- Screenshots (if applicable)
+If you find a bug, please open an issue with:
+- A clear description of the problem
+- Steps to reproduce it
+- Expected vs. actual behavior
+- Screenshots, if relevant
 - Your environment (OS, Python version, etc.)
 
 ### Suggesting Enhancements
 
-Enhancement suggestions are welcome! Please:
-- Use a clear and descriptive title
-- Provide detailed description of the proposed feature
-- Explain why this enhancement would be useful
-- Include examples or mockups if possible
+- Use a clear, descriptive title
+- Describe the proposed feature
+- Explain why it would be useful
+- Include examples or mockups if you have them
 
 ### Pull Requests
 
@@ -30,12 +29,12 @@ Enhancement suggestions are welcome! Please:
 
 2. **Create a feature branch**
    ```bash
-   git checkout -b feature/YourAmazingFeature
+   git checkout -b feature/your-feature-name
    ```
 
 3. **Make your changes**
    - Follow the existing code style
-   - Add comments for complex logic
+   - Add comments for non-obvious logic
    - Update documentation if needed
 
 4. **Test your changes**
@@ -43,30 +42,28 @@ Enhancement suggestions are welcome! Please:
    streamlit run app.py
    ```
    - Test with multiple stock symbols
-   - Verify error handling works
-   - Check UI responsiveness
+   - Check that error handling still works
+   - Check the UI at different window sizes
 
 5. **Commit your changes**
-   ```bash
-   git commit -m 'Add some AmazingFeature'
-   ```
-   Use clear, descriptive commit messages
+
+   Use clear, descriptive commit messages.
 
 6. **Push to your fork**
    ```bash
-   git push origin feature/YourAmazingFeature
+   git push origin feature/your-feature-name
    ```
 
 7. **Open a Pull Request**
-   - Provide a clear description of changes
+   - Describe what changed and why
    - Reference any related issues
    - Include screenshots for UI changes
 
-## 📋 Development Guidelines
+## Development Guidelines
 
 ### Code Style
 
-- Follow PEP 8 style guide for Python code
+- Follow PEP 8
 - Use meaningful variable and function names
 - Keep functions focused and modular
 - Add docstrings to functions
@@ -76,7 +73,7 @@ Enhancement suggestions are welcome! Please:
 - Test with various stock symbols (tech, finance, automotive, etc.)
 - Test error cases (invalid symbols, API failures)
 - Verify all three columns render correctly
-- Check mobile responsiveness
+- Check mobile/narrow-window layout
 
 ### Documentation
 
@@ -84,27 +81,25 @@ Enhancement suggestions are welcome! Please:
 - Add comments for complex algorithms
 - Update requirements.txt for new dependencies
 
-## 🎯 Good First Issues
+## Good First Issues
 
-Looking for where to start? Consider:
-- Adding more chart types (candlestick, bar charts)
-- Implementing caching to reduce API calls
-- Adding more financial metrics (P/E ratio, market cap)
-- Improving error messages
-- Adding unit tests
-- Enhancing mobile UI
+- Add more chart types (candlestick, bar charts)
+- Add caching to reduce redundant API calls
+- Add more financial metrics (P/E ratio, market cap)
+- Improve error messages
+- Add unit tests
+- Improve the mobile layout
 
-## 💬 Questions?
+## Questions?
 
-Feel free to:
 - Open an issue for questions
 - Reach out on [LinkedIn](https://www.linkedin.com/in/takako-kunugi-b901361b4/)
 
-## 📜 Code of Conduct
+## Code of Conduct
 
 - Be respectful and inclusive
 - Welcome newcomers
 - Focus on constructive feedback
 - Help others learn and grow
 
-Thank you for contributing! 🎉
+Thanks for contributing.

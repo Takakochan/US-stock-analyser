@@ -1,24 +1,21 @@
 import pandas as pd
-from matplotlib.pylab import *
+import matplotlib.pyplot as plt
 import streamlit as st
-from ftplib import FTP_TLS
-import ftplib
-from io import BytesIO
-import io
-import numpy as np
 import re
 import requests
 from openai import OpenAI
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
 
 api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
 headers = {"User-Agent": "takakokunugi@gmail.com"}
 
-# Get all companies data once
-company_tickers = requests.get("https://www.sec.gov/files/company_tickers.json", headers=headers).json()
+
+@st.cache_data(ttl="1d")
+def get_company_tickers(headers):
+    return requests.get("https://www.sec.gov/files/company_tickers.json", headers=headers).json()
+
+
+company_tickers = get_company_tickers(headers)
 
 
 # Helper class to robustly parse floats
@@ -32,15 +29,32 @@ class FloatProcessor:
         return float(s)
 
 
+# Some filers use different us-gaap tags for the same concept.
+EPS_TAGS = ["EarningsPerShareDiluted", "EarningsPerShareBasic"]
+REVENUE_TAGS = [
+    "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "RevenueFromContractWithCustomerIncludingAssessedTax",
+    "Revenues",
+]
+
+
+def _first_available_tag(us_gaap_facts, tags):
+    for tag in tags:
+        if tag in us_gaap_facts:
+            return tag
+    raise KeyError(f"None of the expected tags found: {tags}")
+
+
+@st.cache_data(ttl="1h")
 def get_company_facts(headers, cik):
     facts = requests.get(
         f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json",
         headers=headers).json()
-    epss = pd.json_normalize(
-        facts['facts']['us-gaap']['EarningsPerShareDiluted']['units']
-        ['USD/shares'])
-    revenues = pd.json_normalize(facts['facts']['us-gaap'][
-        'RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD'])
+    us_gaap = facts['facts']['us-gaap']
+    eps_tag = _first_available_tag(us_gaap, EPS_TAGS)
+    revenue_tag = _first_available_tag(us_gaap, REVENUE_TAGS)
+    epss = pd.json_normalize(us_gaap[eps_tag]['units']['USD/shares'])
+    revenues = pd.json_normalize(us_gaap[revenue_tag]['units']['USD'])
     # Clean up dataframe
     epss = epss.dropna(subset=['frame'])
     revenues = revenues.dropna(subset=['frame'])[[
@@ -145,7 +159,6 @@ def fetch_and_plot_ticker(choosensymbol,
 
 st.set_page_config(
     page_title="US Stock Analyser",
-    page_icon="📈",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -179,8 +192,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<h1 class="main-header">📈 US Stock Analyser</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Real-time financial analysis with AI-powered competitive insights</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">US Stock Analyser</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Quarterly financials from SEC EDGAR, with competitor summaries from OpenAI</p>', unsafe_allow_html=True)
 
 # User input for stock ticker
 choosensymbol = st.text_input(
@@ -190,16 +203,16 @@ choosensymbol = st.text_input(
 ).upper()
 
 if not choosensymbol:
-    st.info("👆 Enter a stock symbol above to get started!")
+    st.info("Enter a stock symbol above to get started.")
     st.markdown("---")
     st.markdown("""
-    ### 🎯 What This App Does
-    - **📊 Financial Visualization**: View EPS and Revenue trends over the last 10 quarters
-    - **🤖 AI-Powered Analysis**: Get competitor insights powered by OpenAI
-    - **📈 Competitive Comparison**: Compare growth metrics with top competitors
-    - **🔗 Additional Resources**: Direct links to Yahoo Finance for deeper research
+    ### What this app does
+    - Plots EPS and revenue trends over the last 10 quarters, from SEC filings
+    - Summarizes a company's main competitors using OpenAI
+    - Charts the same trends for up to 5 of those competitors
+    - Links out to Yahoo Finance for further research
 
-    ### 💡 Try These Examples
+    ### Example tickers
     - **AAPL** - Apple Inc.
     - **MSFT** - Microsoft Corporation
     - **GOOGL** - Alphabet Inc.
@@ -208,14 +221,14 @@ if not choosensymbol:
     st.stop()
 
 url = f'https://finance.yahoo.com/quote/{choosensymbol}/financials?p={choosensymbol}'
-st.markdown(f"### 📊 Analyzing: **{choosensymbol}**")
-st.markdown(f"🔗 [View on Yahoo Finance]({url}) | [SEC Filings](https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&ticker={choosensymbol})")
+st.markdown(f"### {choosensymbol}")
+st.markdown(f"[View on Yahoo Finance]({url}) | [SEC Filings](https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&ticker={choosensymbol})")
 st.markdown("---")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("### 📊 Financial Performance")
+    st.markdown("### Financial Performance")
     with st.spinner(f'Fetching data for {choosensymbol}...'):
         epss = fetch_and_plot_ticker(choosensymbol, company_tickers, headers)
     if epss is not None and len(epss) > 0:
@@ -232,65 +245,73 @@ with col1:
             help="Quarterly Revenue"
         )
 
+competitor_text = None
+
 with col2:
-    st.markdown("### 🤖 AI Competitor Analysis")
-    with st.spinner('Analyzing competitors with AI...'):
+    st.markdown("### Competitor Analysis")
+    with st.spinner('Asking OpenAI for competitors...'):
         try:
             # Compose OpenAI prompt
             prompt = (
                 f"What is the name of the company for this symbol {choosensymbol}? "
                 "Make a list of the names of the competitors to that company on the US stock market, with their symbols and five main services or products for each, in descending order of sales."
             )
-            response = client.responses.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                instructions="You are a specialist of US stock market",
-                input=prompt,
+                messages=[
+                    {"role": "system", "content": "You are a specialist of US stock market"},
+                    {"role": "user", "content": prompt},
+                ],
             )
-            st.markdown("#### 🎯 Competitive Landscape")
-            st.write(response.output_text)
+            competitor_text = response.choices[0].message.content
+            st.markdown("#### Competitive Landscape")
+            st.write(competitor_text)
         except Exception as e:
-            st.error(f"❌ Unable to fetch AI analysis: {e}")
+            st.error(f"Unable to fetch AI analysis: {e}")
             st.info("Please check your OpenAI API key configuration.")
 
 with col3:
-    st.markdown("### 📈 Competitor Growth Trends")
+    st.markdown("### Competitor Growth Trends")
     with st.spinner('Loading competitor data...'):
-        try:
-            res2_prompt = f"Extract only US stock ticker symbols from this text (e.g., AAPL, META, MSFT): {response.output_text}"
-            response2 = client.responses.create(
-                model="gpt-3.5-turbo",
-                input=res2_prompt,
-            )
-            # Basic parsing, should ideally use regex to extract only valid tickers
-            tickers = [
-                t.replace("'", '').strip().upper()
-                for t in re.split(r'[,\s]+', response2.output_text)
-                if t.isalnum() and len(t) <= 5  # crude filter
-            ]
+        if competitor_text is None:
+            st.info("No competitor data available at this time.")
+        else:
+            try:
+                res2_prompt = f"Extract only US stock ticker symbols from this text (e.g., AAPL, META, MSFT): {competitor_text}"
+                response2 = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": res2_prompt}],
+                )
+                # Tickers are the all-caps 1-5 letter tokens in the reply
+                seen = set()
+                tickers = []
+                for t in re.findall(r'\b[A-Z]{1,5}\b', response2.choices[0].message.content):
+                    if t not in seen:
+                        seen.add(t)
+                        tickers.append(t)
 
-            competitor_count = 0
-            for r in tickers:
-                if competitor_count >= 5:  # Limit to 5 competitors
-                    break
-                if r == "FB": r = "META"  # handle Facebook->Meta change
-                if r != choosensymbol:  # Don't show the same company
-                    st.markdown(f"#### 🏢 {r}")
-                    fetch_and_plot_ticker(r, company_tickers, headers, show_plot=True)
-                    competitor_count += 1
+                competitor_count = 0
+                for r in tickers:
+                    if competitor_count >= 5:  # Limit to 5 competitors
+                        break
+                    if r == "FB": r = "META"  # handle Facebook->Meta change
+                    if r != choosensymbol:  # Don't show the same company
+                        st.markdown(f"#### {r}")
+                        fetch_and_plot_ticker(r, company_tickers, headers, show_plot=True)
+                        competitor_count += 1
 
-            if competitor_count == 0:
-                st.info("No competitor data available at this time.")
-        except Exception as e:
-            st.error(f"❌ Unable to fetch competitor data: {e}")
+                if competitor_count == 0:
+                    st.info("No competitor data available at this time.")
+            except Exception as e:
+                st.error(f"Unable to fetch competitor data: {e}")
 
 # Footer
 st.markdown("---")
 st.markdown("""
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p>📊 Data sourced from <a href='https://www.sec.gov/edgar' target='_blank'>SEC EDGAR</a> |
-        🤖 AI powered by <a href='https://openai.com' target='_blank'>OpenAI</a></p>
-        <p>Built with ❤️ using Streamlit |
-        <a href='https://www.linkedin.com/in/takako-kunugi-b901361b4/' target='_blank'>By Takako Kunugi</a></p>
+        <p>Data from <a href='https://www.sec.gov/edgar' target='_blank'>SEC EDGAR</a>,
+        competitor summaries from <a href='https://openai.com' target='_blank'>OpenAI</a></p>
+        <p><a href='https://www.linkedin.com/in/takako-kunugi-b901361b4/' target='_blank'>Takako Kunugi</a></p>
     </div>
 """, unsafe_allow_html=True)
 

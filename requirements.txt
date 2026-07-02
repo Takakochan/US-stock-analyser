@@ -1,9 +1,5 @@
 pandas
 matplotlib
-pyftpdlib
-bytesbufio
-Python-IO
-streamlit-toggle
+streamlit
 requests
-datetime
 openai == 1.76.0
