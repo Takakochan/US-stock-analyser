@@ -161,4 +161,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Takako Kunugi**
 
 - LinkedIn: [@takako-kunugi](https://www.linkedin.com/in/takako-kunugi-b901361b4/)
-- GitHub: [@yourusername](https://github.com/yourusername)
+- GitHub: [@Takakochan](https://github.com/Takakochan)
