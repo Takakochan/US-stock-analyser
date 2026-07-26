@@ -3,3 +3,4 @@ matplotlib
 streamlit
 requests
 openai == 1.76.0
+pydantic

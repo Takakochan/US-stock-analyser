@@ -4,6 +4,8 @@ import streamlit as st
 import re
 import requests
 from openai import OpenAI
+from typing import Optional
+from pydantic import BaseModel, model_validator
 
 api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
@@ -29,7 +31,7 @@ class FloatProcessor:
         return float(s)
 
 
-# Some filers use different us-gaap tags for the same concept.
+# Known tag variants per concept — add more here as new filers are encountered
 EPS_TAGS = ["EarningsPerShareDiluted", "EarningsPerShareBasic"]
 REVENUE_TAGS = [
     "RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -38,30 +40,53 @@ REVENUE_TAGS = [
 ]
 
 
-def _first_available_tag(us_gaap_facts, tags):
+def _extract_tag(us_gaap: dict, tags: list[str]) -> Optional[pd.DataFrame]:
+    """Try each tag in order; return a normalised DataFrame or None if none found."""
     for tag in tags:
-        if tag in us_gaap_facts:
-            return tag
-    raise KeyError(f"None of the expected tags found: {tags}")
+        if tag in us_gaap:
+            units = us_gaap[tag].get('units', {})
+            # EPS units are 'USD/shares', revenue units are 'USD'
+            for unit_key in ('USD/shares', 'USD'):
+                if unit_key in units:
+                    return pd.json_normalize(units[unit_key])
+    return None
+
+
+class CompanyFacts(BaseModel):
+    """Parsed SEC EDGAR facts for one company. Fields are None when data is unavailable."""
+    eps: Optional[pd.DataFrame] = None
+    revenue: Optional[pd.DataFrame] = None
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    @model_validator(mode='before')
+    @classmethod
+    def parse_sec_response(cls, data: dict) -> dict:
+        us_gaap = data.get('facts', {}).get('us-gaap', {})
+        eps_df = _extract_tag(us_gaap, EPS_TAGS)
+        rev_df = _extract_tag(us_gaap, REVENUE_TAGS)
+
+        if eps_df is not None:
+            eps_df = eps_df.dropna(subset=['frame'])
+
+        if rev_df is not None:
+            rev_df = (rev_df.dropna(subset=['frame'])
+                      [["end", "val"]]
+                      .rename(columns={"val": "rev"}))
+
+        return {"eps": eps_df, "revenue": rev_df}
 
 
 @st.cache_data(ttl="1h")
-def get_company_facts(headers, cik):
-    facts = requests.get(
+def get_company_facts(headers, cik) -> tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+    raw = requests.get(
         f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json",
         headers=headers).json()
-    us_gaap = facts['facts']['us-gaap']
-    eps_tag = _first_available_tag(us_gaap, EPS_TAGS)
-    revenue_tag = _first_available_tag(us_gaap, REVENUE_TAGS)
-    epss = pd.json_normalize(us_gaap[eps_tag]['units']['USD/shares'])
-    revenues = pd.json_normalize(us_gaap[revenue_tag]['units']['USD'])
-    # Clean up dataframe
-    epss = epss.dropna(subset=['frame'])
-    revenues = revenues.dropna(subset=['frame'])[[
-        "end", "val"
-    ]].rename(columns={"val": "rev"})
-    epss = epss.merge(revenues, on='end')
-    return epss, revenues
+    facts = CompanyFacts.model_validate(raw)
+    if facts.eps is None or facts.revenue is None:
+        return None, None
+    merged = facts.eps.merge(facts.revenue, on='end')
+    return merged, facts.revenue
 
 
 def add_differ_days(epss):
@@ -143,6 +168,9 @@ def fetch_and_plot_ticker(choosensymbol,
     try:
         cik = str(item['cik_str']).zfill(10)
         epss, _ = get_company_facts(headers, cik)
+        if epss is None:
+            st.warning(f"No EPS or Revenue data found for {choosensymbol}.")
+            return None
         epss = add_differ_days(epss)
         epss = process_eps_revenue(epss)
         if show_plot:
