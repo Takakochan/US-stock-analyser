@@ -40,15 +40,25 @@ REVENUE_TAGS = [
 ]
 
 
+def _find_records(node) -> Optional[list]:
+    """Recursively walk nested dicts/lists to find SEC period records (dicts with a 'val' key)."""
+    if isinstance(node, list) and node and isinstance(node[0], dict) and 'val' in node[0]:
+        return node
+    if isinstance(node, dict):
+        for value in node.values():
+            result = _find_records(value)
+            if result is not None:
+                return result
+    return None
+
+
 def _extract_tag(us_gaap: dict, tags: list[str]) -> Optional[pd.DataFrame]:
     """Try each tag in order; return a normalised DataFrame or None if none found."""
     for tag in tags:
         if tag in us_gaap:
-            units = us_gaap[tag].get('units', {})
-            # EPS units are 'USD/shares', revenue units are 'USD'
-            for unit_key in ('USD/shares', 'USD'):
-                if unit_key in units:
-                    return pd.json_normalize(units[unit_key])
+            records = _find_records(us_gaap[tag])
+            if records is not None:
+                return pd.json_normalize(records)
     return None
 
 
